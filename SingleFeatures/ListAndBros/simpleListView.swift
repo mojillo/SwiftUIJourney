@@ -1,5 +1,6 @@
+
 //
-//  simpleLists.swift
+//  selectionLists.swift
 //	simple selection list
 //
 //  Created by Parth on 26/08/24.
@@ -11,7 +12,7 @@ struct listsOption 	: Identifiable {
 	let id 			= UUID()
 	let title		: String
 	let colorCode	: String
-	let isSelected	: Bool = false
+	var isSelected	: Bool = false
 }
 
 @Observable
@@ -23,10 +24,23 @@ class sampleViewModel {
 		listsOption(title: "✽ Gun Powder"	,colorCode: "#414257")	,
 		listsOption(title: "✽ Parchment"		,colorCode: "#FEFCAF")	,
 		listsOption(title: "✽ Blue Zircon"	,colorCode: "#57FEFF")]
+
+	/// Flips on and off
+	/// - Parameter id: passed in the view for each
+	func setResetSelections(optionId id : UUID) {
+		for index in options.indices {
+			options[index].isSelected = (options[index].id == id)
+		}
+	}
 }
 
 struct ColorListView: View {
 	@State var sampleVieModelObj: sampleViewModel = sampleViewModel()
+
+	private func changeColorOnSelection(isSelected: Bool) -> Color {
+		return Color(.green).opacity(isSelected ? 1.0 : 0.3)
+	}
+
 	var body: some View {
 
 		ZStack(alignment: .topLeading) {
@@ -39,23 +53,36 @@ struct ColorListView: View {
 				Text("Pick a color ")
 					.font(.system(size: 22))
 					.bold()
-
 				ForEach(sampleVieModelObj.options) { options in
 					HStack {
-						Image(systemName: "rectangle.portrait.and.arrow.forward.fill")
+						Image(systemName: "circle.fill")
 							.frame(width: 40, height: 40, alignment: .leading)
-							.foregroundStyle(Color(hex: options.colorCode) ?? .black)
+							.foregroundStyle(changeColorOnSelection(isSelected: options.isSelected))
 
 						Text(options.title)
 							.foregroundStyle(.primary)
 					}
 					.padding()
 					.frame( maxWidth: .infinity, alignment: .leading)
-					.border(Color(hex: options.colorCode) ?? .accentColor, width: 0.5)
 					.cornerRadius(12)
+					.overlay {
+						RoundedRectangle(cornerRadius: 12)
+							.stroke(
+
+								options.isSelected ?
+								Color(hex: options.colorCode) ?? .accentColor : Color.clear,
+								lineWidth: 2)
+					}
+					.scaleEffect(options.isSelected ? 1.05 : 1.0)
+					.animation(.bouncy, value: options.isSelected)
+					.onTapGesture {
+						sampleVieModelObj.setResetSelections(optionId: options.id)
+					}
 				}
+
 			}
 			.padding()
+
 		}
 	}
 }
